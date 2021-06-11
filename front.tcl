@@ -20,8 +20,9 @@ pack .fr.tltlb -pady 5 -anchor center -side top
 ttk::label .fr.usrlb -text username
 pack .fr.usrlb -anchor center -side top
 
-ttk::button .fr.cb -text LOGIN
+ttk::button .fr.cb -text LOGIN -default active -command myaction
 pack .fr.cb -padx 5 -pady 5 -side bottom -anchor se
+bind .fr <Return> ".action invoke"
 
 
 ttk::entry .fr.usrnm -textvariable username 
