@@ -63,7 +63,7 @@ ttk::entry .manager.fr.newcase -textvariable newcase
 ttk::entry .manager.fr.newpass -textvariable newpass -show "*"
 ttk::entry .manager.fr.kpass -textvariable knownpass -show "*"
 
-ttk::button .manager.fr.cb -text RAND_PASS
+ttk::button .manager.fr.cb -text "create password" -default active -command {add_pass $newcase $newpass}
 ttk::button .manager.fr.del -text Delete
 
 ttk::label .manager.fr.kcaselb -text Website/Use
@@ -109,14 +109,18 @@ wm transient .
 
 
 ##function wrappers for file handling bindings
-proc show_pass {} {
-    
+proc add_pass { newcase newpass} {
+    puts "added pass"
+    FileHandler::add_passwords $newcase $newpass
+    FileHandler::load_file encryptionLoad
+    .manager.fr.kcase configure -values $FileHandler::dic_list
 }
 proc check_login { password} {
     set logintruth [FileHandler::check_password_attempt $password ]
     if { $logintruth == "true"} {
         wm deiconify .manager
         wm withdraw .front
+        FileHandler::load_file encryptionLoad
         .manager.fr.kcase configure -values $FileHandler::dic_list
     } 
     if { $logintruth == "false"} {
