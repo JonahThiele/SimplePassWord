@@ -1,8 +1,10 @@
 namespace eval ::FileHandler {
   
-  namespace export check_password_attempt load_file check_null_file check_hash hash write_file parse_entries
+  namespace export check_password_attempt load_file check_null_file check_hash hash write_file parse_entries fill_dic_list parse_cipher encrypt decrypt
   variable hashedpass ""
-  variable passmap 
+  variable passmap [dic create null "create_null"]
+  variable accountmap [dict create null "create_null"]
+  variable dic_list {}
 
  
 }
@@ -10,14 +12,21 @@ proc FileHandler::check_password_attempt { text } {
     set filetruth [check_null_file]
     if { $filetruth == "true"} {
         set hashtext [hash $text]
+        puts $hashtext
         write_file accountpass $hashtext
-    } else {
-        load_file placehodler
-        set storedhash [dict get $FileHandler::passmap accountpass]
+        return true
+    } 
+    if { $filetruth == "false"} {
+        load_file placeholder
+        FileHandler::fill_dic_list
+        set storedhash [dict get $FileHandler::accountmap accountpass]
         set hashtext [hash $text]
+        puts "$storedhash\n$hashtext"
         set hashtruth [check_hash $hashtext $storedhash]
-        if { $filetruth == "true"} {
-            
+        if { $hashtruth == "true"} {
+            return true 
+        } else {
+            return false
         }
     }
 
@@ -52,12 +61,22 @@ proc FileHandler::check_null_file {} {
 }
 
 proc FileHandler::parse_entries { lines } {
-    global passmap
+    variable accountmap
     for { set a 0}  {$a < [llength $lines]} {incr a} {
-        set passes [split [ lindex $lines $a] ":"]
-        dict set FileHandler::passmap  [lindex $passes 0]  [lindex $passes 0]
+        set currentline [lindex $lines $a]
+        set passes [split $currentline ":"]
+        set case [lindex $passes 0]
+        set pass [string trimright [lindex $passes 1]]
+        dict set accountmap $case $pass
     }
 
+}
+
+proc FileHandler::dict_append { dict newkey newval } {
+
+    foreach key dict {
+        
+    }
 }
 
 proc FileHandler::del_entry { lines case } {
@@ -70,15 +89,15 @@ proc FileHandler::del_entry { lines case } {
 
 proc FileHandler::hash {text} {
     set hash [sha2::sha256 $text]
-    return hash
+    return $hash
      
 }
 
 proc FileHandler::check_hash {hash text} {
-    if { [string equal $hash $text] == 1} {
-        return "false"
-    } else {
+    if { $hash == $text} {
         return "true"
+    } else {
+        return "false"
     }
 
 }
@@ -89,29 +108,32 @@ proc FileHandler::write_file {case pass} {
     close $fp
 }
 
-# proc FileHandler::check_login {text} {
-#     set fileValue [ check_null_file ]
-#     if {$fileValue == "true"} {
-#         set hashedtext [FileHandler::hash text]
-#         FileHandler::write_file passlogin $hashedtext
-#     }  
-#     if {$fileValue == "false"} {
-#         load_file null 
-#         if { [dict exists $FileHandler::passmap passlogin] == 0} {
-#             puts killyourself
-#         } else {
-#             puts nibber
-#             set storedhash [dict get $FileHandler::passmap passlogin]
-#             set $FileHandler::hashedpass [hash $text]
-#             set checkPassVal [FileHandler::check_hash $storedhash $FileHandler::passmap]
-#             if {checkPassVal == "true"} {
-#                 puts "hi"
-#         }
-#         }
-#     }
+proc FileHandler::fill_dic_list { } {
+    variable dic_list
+    load_file placeholder
+    set dic_list {}
+    foreach theKey [dict keys $FileHandler::passmap] {
+        if {$theKey == "null"} {
 
-# }
+        } else {
+            lappend dic_list $theKey
+        }
+    }
+    puts $FileHandler::dic_list
 
+}
+
+proc FileHandler::parse_cipher {} {
+
+}
+
+proc FileHandler::encrypt {} {
+
+}
+
+proc FileHandler::decrypt {} {
+
+}
 namespace eval ::FileHandler { variable version 1.0 }
 
 package provide FileHandler $FileHandler::version
