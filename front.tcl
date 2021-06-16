@@ -55,13 +55,13 @@ wm geometry .manager ${width}x${height}+${x}+${y}
 ttk::frame .manager.fr -width $width -height $height
 
 ttk::combobox .manager.fr.kcase -textvariable kcase
-bind .manager.fr.kcase <<ComboboxSelected>> { set knownpass [dict get $FileHandler::passmap $kcase] }
+bind .manager.fr.kcase <<ComboboxSelected>> { set knownpass [dict get $FileHandler::knownmap $kcase] }
 .manager.fr.kcase state readonly
 
 ttk::entry .manager.fr.newcase -textvariable newcase
 
-ttk::entry .manager.fr.newpass -textvariable newpass -show "*"
-ttk::entry .manager.fr.kpass -textvariable knownpass -show "*"
+ttk::entry .manager.fr.newpass -textvariable newpass 
+ttk::entry .manager.fr.kpass -textvariable knownpass 
 
 ttk::button .manager.fr.cb -text "create password" -default active -command {add_pass $newcase $newpass}
 ttk::button .manager.fr.del -text Delete

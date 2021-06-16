@@ -1,12 +1,12 @@
 namespace eval ::FileHandler {
   
-  namespace export check_password_attempt load_file check_null_file check_hash hash write_file parse_entries fill_dic_list parse_cipher encrypt decrypt add_passwords
-  variable Key ""
+  namespace export check_password_attempt load_file check_null_file check_hash hash write_file parse_entries fill_dic_list parse_cipher encrypt decrypt add_passwords create_key
+  variable Key "00000000"
   variable passmap [dict create null "create_null"]
   variable accountmap [dict create null "create_null"]
+  variable knownmap ""
   variable dic_list {}
 
- 
 }
 proc FileHandler::check_password_attempt { text } {
     variable Key
@@ -25,7 +25,7 @@ proc FileHandler::check_password_attempt { text } {
         puts "$storedhash\n$hashtext"
         set hashtruth [check_hash $hashtext $storedhash]
         if { $hashtruth == "true"} {
-            set Key [blowfish::Init ecb $text 00000000]
+            FileHandler::create_key $text
             return true 
         } else {
             return false
@@ -121,16 +121,18 @@ proc FileHandler::write_file {case pass file} {
 proc FileHandler::fill_dic_list { } {
     load_file encryptionLoad
     variable dic_list
+    variable knownmap
     set dic_list {}
     foreach theKey [dict keys $FileHandler::passmap] {
         if {$theKey == "null"} {
 
         } else {
-            set decryptedtext [FileHandler::decrypt $theKey]
-            lappend dic_list $decryptedtext
+            set decryptedtext [FileHandler::decrypt [dict get $FileHandler::passmap $theKey]]
+            dict set knownmap $knownmap $theKey $decryptedtext
+            lappend dic_list $theKey
         }
     }
-    puts $FileHandler::dic_list
+    puts $FileHandler::knownmap
 
 }
 
@@ -142,18 +144,19 @@ proc FileHandler::add_passwords {case text} {
     FileHandler::write_file $case $pass "encryption.txt"
 }
 
-proc FileHandler::encrypt { text } {
-    set listext [split $text]
-    return blowfish::Encrypt $FileHandler::Key $listtext
+proc FileHandler::create_key { user_in } {
+    variable Key
+    set $Key [string range $user_in 0 7]
 }
 
-proc FileHandler::decrypt { listtext } {
-    variable text
-    set plainlisttext [blowfish::Decrypt $FileHandler::Key $listtext]
-    foreach char $plainlisttext {
-        lappend $text $char
-    }
-    return text
+proc FileHandler::encrypt { msg } {
+    set encryptedMsg [DES::des -dir encrypt -key $FileHandler::Key $msg]
+    return $encryptedMsg
+}
+
+proc FileHandler::decrypt { encryptedMsg } {
+    set decryptedMsg [DES::des -dir decrypt -key $FileHandler::Key $encryptedMsg]
+    return $decryptedMsg
 
 }
 namespace eval ::FileHandler { variable version 1.0 }
@@ -161,4 +164,4 @@ namespace eval ::FileHandler { variable version 1.0 }
 package provide FileHandler $FileHandler::version
 package require Tcl 8.5-
 package require sha256
-package require blowfish
+package require des
